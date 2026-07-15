@@ -1,0 +1,2735 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  STAFF
+  CUSTOMER
+}
+
+enum PlanInterval {
+  MONTHLY
+  YEARLY
+  LIFETIME
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String   @id @default(uuid()) @map("_id")
+  email         String   @unique
+  passwordHash  String?
+  name          String?
+  phone         String?
+  image         String?
+  emailVerified DateTime?
+  companyName     String?
+  role            UserRole  @default(STAFF)
+  isActive        Boolean   @default(true)
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  refreshTokens    RefreshToken[]
+  workspaceRoles   WorkspaceMember[]
+  subscriptions   Subscription[] @relation("UserSubscriptions")
+  createdProjects Project[] @relation("ProjectCreator")
+  assignedTasks   TaskAssignment[]
+  approvedRevenues    Revenue[]
+  approvedExpenses    Expense[]
+  approvedDebitNotes  DebitNote[]   @relation("ApprovedDebitNotes")
+  approvedCreditNotes CreditNote[]  @relation("ApprovedCreditNotes")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @map("_id")
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Account {
+  id                String  @id @default(uuid()) @map("_id")
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @map("_id")
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(uuid()) @map("_id")
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Workspace {
+  id          String   @id @default(uuid()) @map("_id")
+  name        String
+  slug        String   @unique
+  logo        String?
+  description String?
+  domain      String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members         WorkspaceMember[]
+  projects        Project[]
+  crmLeads        CrmLead[]
+  crmDeals        CrmDeal[]
+  employees       Employee[]
+  departments     Department[]
+  invoices        Invoice[]
+  expenses        Expense[]
+  products        Product[]
+  posOrders       PosOrder[]
+  salesProposals  SalesProposal[]
+  documents       Document[]
+  assets          Asset[]
+  assetAssignments AssetAssignment[]
+  assetMaintenances AssetMaintenance[]
+  assetDepreciations AssetDepreciation[]
+  assetCategories AssetCategory[]
+  assetBorrowRents      AssetBorrowRent[]
+  assetBorrowRentPayments AssetBorrowRentPayment[]
+  locations              Location[]
+  calendarEvents  CalendarEvent[]
+  reminders       Reminder[]
+  workflows       Workflow[]
+  mediaFiles      MediaFile[]
+  activityLogs    ActivityLog[]
+  customRoles     CustomRole[]
+  productCategories ProductCategory[]
+  taxes           Tax[]
+  units           Unit[]
+  leaveTypes          LeaveType[]
+  leaveApplications   LeaveApplication[]
+  attendances         Attendance[]
+  shifts              Shift[]
+  holidays            Holiday[]
+  awards              Award[]
+  promotions         Promotion[]
+  resignations       Resignation[]
+  terminations       Termination[]
+  warnings           Warning[]
+  complaints         Complaint[]
+  transfers          Transfer[]
+  acknowledgments    Acknowledgment[]
+  events             Event[]
+  companyPolicies    CompanyPolicy[]
+  branches           Branch[]
+  designations       Designation[]
+  documentTypes      DocumentType[]
+  awardTypes         AwardType[]
+  terminationTypes   TerminationType[]
+  warningTypes       WarningType[]
+  complaintTypes     ComplaintType[]
+  holidayTypes       HolidayType[]
+  documentCategories DocumentCategory[]
+  announcementCategories AnnouncementCategory[]
+  eventTypes         EventType[]
+  allowanceTypes     AllowanceType[]
+  deductionTypes     DeductionType[]
+  loanTypes          LoanType[]
+  workingDays        WorkingDay[]
+  ipRestricts        IpRestrict[]
+  bankAccounts        BankAccount[]
+  bankTransactions    BankTransaction[]
+  bankTransfers       BankTransfer[]
+  customerPayments    CustomerPayment[]
+  vendorPayments      VendorPayment[]
+  revenues            Revenue[]
+  chartOfAccounts     ChartOfAccount[]
+  contractors         Contractor[]
+  workPermits         WorkPermit[]
+  crmAccounts         CrmAccount[]
+  crmContacts         CrmContact[]
+  opportunities       Opportunity[]
+  salesOrders         SalesOrder[]
+  journalEntries      JournalEntry[]
+  leaveBalances       LeaveBalance[]
+  notifications       Notification[]
+  payrollRuns         PayrollRun[]
+  timesheets          Timesheet[]
+  stockTransfers      StockTransfer[]
+  warehouses          Warehouse[]
+  vendors             Vendor[]
+  purchaseInvoices    PurchaseInvoice[]
+  purchaseReturns     PurchaseReturn[]
+  customers           Customer[]
+  salesInvoices       SalesInvoice[]
+  salesReturns        SalesReturn[]
+  quotations          Quotation[]
+  salesQuotes         SalesQuote[]
+  salesAccounts       SalesAccount[]
+  posDiscounts        PosDiscount[]
+  posReturns          PosReturn[]
+  systemSetup         SystemSetup[]
+  debitNotes          DebitNote[]
+  creditNotes         CreditNote[]
+  crmPipelines        CrmPipeline[]
+  crmLeadStages       CrmLeadStage[]
+  crmDealStages       CrmDealStage[]
+  crmLabels           CrmLabel[]
+  crmSources          CrmSource[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id           String   @id @default(uuid()) @map("_id")
+  userId       String
+  workspaceId  String
+  role         UserRole @default(STAFF)
+  customRoleId String?
+  joinedAt     DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace  Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customRole CustomRole? @relation("CustomRoleMembers", fields: [customRoleId], references: [id])
+
+  @@unique([userId, workspaceId])
+  @@map("workspace_members")
+}
+
+model SubscriptionPlan {
+  id          String        @id @default(uuid()) @map("_id")
+  name        String
+  description String?
+  price       Float
+  interval    PlanInterval  @default(MONTHLY)
+  trialDays   Int           @default(0)
+  isActive    Boolean       @default(true)
+  features    String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id              String        @id @default(uuid()) @map("_id")
+  userId          String
+  planId          String
+  status          PaymentStatus @default(PENDING)
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  trialEndsAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user      User              @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  plan      SubscriptionPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model CrmLead {
+  id           String     @id @default(uuid()) @map("_id")
+  workspaceId  String
+  title        String
+  subject      String?
+  company      String?
+  email        String?
+  phone        String?
+  value        Float?
+  followUpDate DateTime?
+  status       LeadStatus @default(NEW)
+  source       String?
+  assignedTo   String?
+  assignedToId String?
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_leads")
+}
+
+model CrmDeal {
+  id          String     @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  company     String?
+  email       String?
+  phone       String?
+  value       Float?
+  stage       String     @default("lead")
+  probability Int        @default(0)
+  source      String?
+  assignedTo  String?
+  notes       String?
+  closedAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_deals")
+}
+
+model CrmPipeline {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_pipelines")
+}
+
+model CrmLeadStage {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  color       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_lead_stages")
+}
+
+model CrmDealStage {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  pipeline    String?
+  probability Int      @default(0)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_deal_stages")
+}
+
+model CrmLabel {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  pipeline    String?
+  color       String   @default("#6b7280")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_labels")
+}
+
+model CrmSource {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("crm_sources")
+}
+
+model Department {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employees Employee[]
+  designations Designation[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id                 String    @id @default(uuid()) @map("_id")
+  workspaceId        String
+  userId             String?
+  departmentId       String?
+  employeeId         String
+  firstName          String
+  lastName           String
+  email              String
+  phone              String?
+  position           String?
+  salary             Float?
+  hireDate           DateTime  @default(now())
+  dateOfBirth        DateTime?
+  gender             String?
+  biometricEmployeeId String?
+  address            String?
+  city               String?
+  state              String?
+  zipCode            String?
+  country            String?
+  bankName           String?
+  bankAccountNumber  String?
+  bankRoutingNumber  String?
+  hourlyRate         Float?
+  overtimeRate       Float?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  department         Department?         @relation(fields: [departmentId], references: [id])
+  leaveApplications  LeaveApplication[]
+  leaveBalances      LeaveBalance[]
+  attendanceRecords  Attendance[]
+  payslips           Payslip[]
+  documents          Document[]
+  awards             Award[]
+  promotions         Promotion[]
+  resignations       Resignation[]
+  terminations       Termination[]
+  warnings           Warning[]
+  complaints         Complaint[]
+  complaintsAgainst  Complaint[]  @relation("ComplaintAgainst")
+  transfers          Transfer[]
+  acknowledgments    Acknowledgment[]
+  events             Event[]
+
+  @@map("employees")
+}
+
+model Invoice {
+  id           String        @id @default(uuid()) @map("_id")
+  workspaceId  String
+  number       String
+  customerName String
+  customerEmail String?
+  items        Json
+  subtotal     Float
+  tax          Float         @default(0)
+  total        Float
+  status       InvoiceStatus @default(DRAFT)
+  dueDate      DateTime?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+model Expense {
+  id               String   @id @default(uuid()) @map("_id")
+  workspaceId      String
+  expenseNumber    String?
+  category         String
+  bankAccountId    String?
+  chartOfAccountId String?
+  amount           Float
+  referenceNumber  String?
+  description      String?
+  date             DateTime
+  status           String   @default("Draft")
+  approvedById     String?
+  receipt          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  bankAccount    BankAccount?   @relation(fields: [bankAccountId], references: [id])
+  chartOfAccount ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
+  approvedBy     User?          @relation(fields: [approvedById], references: [id])
+
+  @@map("expenses")
+}
+
+model Project {
+  id          String        @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  status      ProjectStatus @default(PLANNING)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  createdBy   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  creator   User             @relation("ProjectCreator", fields: [createdBy], references: [id])
+  tasks     ProjectTask[]
+  members   ProjectMember[]
+
+  @@map("projects")
+}
+
+model ProjectTask {
+  id              String     @id @default(uuid()) @map("_id")
+  projectId       String
+  title           String
+  description     String?
+  status          TaskStatus @default(TODO)
+  priority        String     @default("medium")
+  assignedTo      String?
+  dueDate         DateTime?
+  estimatedHours  Float?
+  actualHours     Float?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignments TaskAssignment[]
+
+  @@map("project_tasks")
+}
+
+model TaskAssignment {
+  id     String @id @default(uuid()) @map("_id")
+  taskId String
+  userId String
+
+  task ProjectTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@map("task_assignments")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid()) @map("_id")
+  projectId String
+  userId    String
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model Product {
+  id                String   @id @default(uuid()) @map("_id")
+  workspaceId       String
+  name              String
+  sku               String?
+  description       String?
+  shortDescription  String?
+  itemType          String   @default("Product")
+  productType       String?
+  warrantyInfo      String?
+  price             Float
+  cost              Float?
+  stock             Int      @default(0)
+  category          String?
+  categoryId        String?
+  taxId             String?
+  taxRate           Float    @default(0)
+  image             String?
+  additionalImages  Json     @default("[]")
+  warehouseId       String?
+  reorderLevel      Int?
+  maxLevel          Int?
+  valuationMethod   String   @default("Weighted Average")
+  trackInventory    Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  workspace        Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  orderItems       PosOrderItem[]
+  productCategory  ProductCategory? @relation(fields: [categoryId], references: [id])
+  tax              Tax?             @relation(fields: [taxId], references: [id])
+  stockTransfers   StockTransfer[]
+  warehouse        Warehouse?       @relation(fields: [warehouseId], references: [id])
+
+  @@map("products")
+}
+
+model PosOrder {
+  id           String        @id @default(uuid()) @map("_id")
+  workspaceId  String
+  orderNumber  String        @unique
+  customerName String?
+  customerId   String?
+  warehouseId  String?
+  items        Json
+  subtotal     Float
+  tax          Float         @default(0)
+  total        Float
+  status       PaymentStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  orderItems PosOrderItem[]
+  warehouse  Warehouse?    @relation(fields: [warehouseId], references: [id])
+  posReturns PosReturn[]
+
+  @@map("pos_orders")
+}
+
+model PosOrderItem {
+  id        String @id @default(uuid()) @map("_id")
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  total     Float
+
+  order   PosOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product  @relation(fields: [productId], references: [id])
+
+  @@map("pos_order_items")
+}
+
+model PosDiscount {
+  id              String    @id @default(uuid()) @map("_id")
+  workspaceId     String
+  name            String
+  applyOn         String    @default("Product")
+  discountType    String    @default("PERCENTAGE")
+  value           Float     @default(0)
+  minimumQuantity Int       @default(1)
+  startDate       DateTime?
+  endDate         DateTime?
+  productIds      Json      @default("[]")
+  selectedCategory String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("pos_discounts")
+}
+
+model PosReturn {
+  id            String   @id @default(uuid()) @map("_id")
+  workspaceId   String
+  returnNumber  String   @unique
+  orderId       String?
+  customerName  String?
+  warehouseId   String?
+  warehouseName String?
+  returnDate    DateTime
+  reason        String?
+  notes         String?
+  items         Json     @default("[]")
+  totalAmount   Float    @default(0)
+  status        String   @default("Draft")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order     PosOrder?  @relation(fields: [orderId], references: [id])
+  warehouse Warehouse? @relation(fields: [warehouseId], references: [id])
+
+  @@map("pos_returns")
+}
+
+model SalesProposal {
+  id                   String   @id @default(uuid()) @map("_id")
+  workspaceId          String
+  number               String   @unique
+  customerName         String
+  customerEmail        String?
+  warehouse            String?
+  paymentTerms         String?
+  notes                String?
+  specialInstructions  String?
+  items                Json
+  subtotal             Float
+  discount             Float    @default(0)
+  tax                  Float    @default(0)
+  total                Float
+  balance              Float
+  status               String   @default("Draft")
+  proposalDate         DateTime
+  dueDate              DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("sales_proposals")
+}
+
+model Quotation {
+  id            String   @id @default(uuid()) @map("_id")
+  workspaceId   String
+  number        String   @unique
+  customerName  String
+  customerEmail String?
+  warehouse     String?
+  paymentTerms  String?
+  notes         String?
+  items         Json     @default("[]")
+  subtotal      Float    @default(0)
+  discount      Float    @default(0)
+  tax           Float    @default(0)
+  total         Float    @default(0)
+  status        String   @default("Draft")
+  proposalDate  DateTime
+  dueDate       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("quotations")
+}
+
+model Setting {
+  id        String   @id @default(uuid()) @map("_id")
+  key       String   @unique
+  value     String   @default("")
+  group     String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model LoginLog {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String?
+  email     String
+  role      String?
+  ip        String?
+  userAgent String?
+  status    String   @default("SUCCESS")
+  createdAt DateTime @default(now())
+
+  @@map("login_logs")
+}
+
+model HelpdeskCategory {
+  id          String   @id @default(uuid()) @map("_id")
+  name        String
+  description String?
+  color       String   @default("#6366f1")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("helpdesk_categories")
+}
+
+model HelpdeskTicket {
+  id          String   @id @default(uuid()) @map("_id")
+  ticketId    String   @unique
+  title       String
+  description String?
+  status      String   @default("OPEN")
+  priority    String   @default("MEDIUM")
+  categoryId  String?
+  creatorName String
+  creatorEmail String?
+  replies     Json     @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("helpdesk_tickets")
+}
+
+model Coupon {
+  id           String    @id @default(uuid()) @map("_id")
+  name         String
+  code         String    @unique
+  type         String    @default("PERCENTAGE")
+  discount     Float
+  usageLimit   Int?
+  limitPerUser Int?
+  minSpend     Float?
+  maxSpend     Float?
+  description  String?
+  expiryDate   DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("coupons")
+}
+
+model Addon {
+  id          String   @id @default(uuid()) @map("_id")
+  name        String
+  slug        String   @unique
+  description String?
+  version     String   @default("1.0.0")
+  isActive    Boolean  @default(true)
+  isPremium   Boolean  @default(false)
+  price       Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subscriptions AddonSubscription[]
+
+  @@map("addons")
+}
+
+model AddonSubscription {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  addonId     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  addon Addon @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, addonId])
+  @@map("addon_subscriptions")
+}
+
+model Document {
+  id              String    @id @default(uuid()) @map("_id")
+  workspaceId     String
+  employeeId      String?
+  name            String
+  title           String?
+  description     String?
+  fileUrl         String?
+  fileType        String?
+  fileSize        Int?
+  folder          String    @default("general")
+  tags            String[]
+  documentCategory String?
+  effectiveDate   DateTime?
+  approvedBy      String?
+  uploadedBy      String?
+  status          String    @default("Pending")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model Location {
+  id             String   @id @default(uuid()) @map("_id")
+  workspaceId    String
+  name           String
+  code           String
+  type           String
+  parentLocation String?
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  postalCode     String?
+  contactPerson  String?
+  contactPhone   String?
+  contactEmail   String?
+  description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("locations")
+}
+
+model AssetCategory {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+  @@map("asset_categories")
+}
+
+model AssetBorrowRent {
+  id               String    @id @default(uuid()) @map("_id")
+  workspaceId      String
+  staffUserId      String?
+  staffUserName    String
+  staffUserEmail   String?
+  assetId          String?
+  assetName        String
+  assetCode        String?
+  startDate        DateTime
+  endDate          DateTime
+  actualReturnDate DateTime?
+  quantity         Int       @default(1)
+  purpose          String?
+  status           String    @default("Draft")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("asset_borrow_rent")
+}
+
+model AssetBorrowRentPayment {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+  borrowRentId    String?
+  assetName       String
+  customerName    String
+  paymentAmount   Float
+  paymentDate     DateTime
+  referenceNumber String?
+  status          String   @default("Draft")
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("asset_borrow_rent_payments")
+}
+
+model Asset {
+  id            String   @id @default(uuid()) @map("_id")
+  workspaceId   String
+  name          String
+  description   String?
+  category      String   @default("general")
+  serialNumber  String?
+  purchaseDate  DateTime?
+  supportedDate DateTime?
+  quantity      Int      @default(1)
+  unitPrice     Float?
+  warrantyPeriod String?
+  image         String?
+  purchasePrice Float?
+  currentValue  Float?
+  location      String?
+  status        String   @default("active")
+  assignedTo    String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assignments AssetAssignment[]
+
+  @@map("assets")
+}
+
+model AssetMaintenance {
+  id                String    @id @default(uuid()) @map("_id")
+  workspaceId       String
+  assetId           String?
+  assetName         String
+  type              String    @default("Preventive")
+  title             String
+  description       String?
+  scheduledDate     DateTime
+  completedDate     DateTime?
+  cost              Float?
+  technician        String?
+  status            String    @default("Scheduled")
+  priority          String    @default("Medium")
+  nextMaintenance   DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("asset_maintenance")
+}
+
+model AssetDepreciation {
+  id             String   @id @default(uuid()) @map("_id")
+  workspaceId    String
+  assetId        String?
+  assetName      String
+  method         String   @default("Straight Line")
+  usefulLife     Int
+  salvageValue   Float    @default(0)
+  startDate      DateTime
+  accumulated    Float    @default(0)
+  status         String   @default("Active")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("asset_depreciation")
+}
+
+model AssetAssignment {
+  id              String    @id @default(uuid()) @map("_id")
+  workspaceId     String
+  assetId         String?
+  assetName       String
+  assignedTo      String
+  assignedDate    DateTime
+  expectedReturn  DateTime?
+  actualReturn    DateTime?
+  status          String    @default("Active")
+  condition       String    @default("Excellent")
+  returnCondition String?
+  returnNotes     String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  asset     Asset?    @relation(fields: [assetId], references: [id])
+
+  @@map("asset_assignments")
+}
+
+model CalendarEvent {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean  @default(false)
+  color       String   @default("#3b82f6")
+  location    String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_events")
+}
+
+model Reminder {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  title       String
+  description String?
+  dueDate     DateTime
+  priority    String   @default("medium")
+  status      String   @default("pending")
+  assignedTo  String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("reminders")
+}
+
+model Workflow {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  trigger     String   @default("manual")
+  actions     Json     @default("[]")
+  conditions  Json     @default("{}")
+  isActive    Boolean  @default(true)
+  lastRun     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workflows")
+}
+
+model MediaFile {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  originalName String
+  url         String
+  mimeType    String
+  size        Int
+  folder      String   @default("general")
+  alt         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("media_files")
+}
+
+model ProductCategory {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  color       String   @default("#3b82f6")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@unique([workspaceId, name])
+  @@map("product_categories")
+}
+
+model Tax {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  rate        Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@unique([workspaceId, name])
+  @@map("taxes")
+}
+
+model Unit {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+  @@map("units")
+}
+
+model LeaveType {
+  id             String   @id @default(uuid()) @map("_id")
+  workspaceId    String
+  name           String
+  daysAllowed    Int      @default(0)
+  isPaid         Boolean  @default(true)
+  carryForward   Boolean  @default(false)
+  maxCarryForward Int     @default(0)
+  color          String   @default("#3b82f6")
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace       Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  leaveBalances   LeaveBalance[]
+  leaveApplications LeaveApplication[]
+
+  @@unique([workspaceId, name])
+  @@map("leave_types")
+}
+
+model LeaveApplication {
+  id             String    @id @default(uuid()) @map("_id")
+  workspaceId    String
+  employeeId     String
+  leaveTypeId    String?
+  startDate      DateTime
+  endDate        DateTime
+  days           Int       @default(1)
+  reason         String?
+  attachment     String?
+  status         String    @default("PENDING")
+  approvedBy     String?
+  approvedAt     DateTime?
+  rejectedReason String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType  LeaveType? @relation(fields: [leaveTypeId], references: [id])
+
+  @@map("leave_applications")
+}
+
+// ─── Attendance & Shifts ─────────────────────────────────────────────────────
+
+model Attendance {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  employeeId  String
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      String   @default("PRESENT")
+  shiftId     String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shift     Shift?    @relation(fields: [shiftId], references: [id])
+
+  @@unique([employeeId, date])
+  @@map("attendances")
+}
+
+model Shift {
+  id           String   @id @default(uuid()) @map("_id")
+  workspaceId  String
+  name         String
+  startTime    String
+  endTime      String
+  breakStart   String   @default("")
+  breakEnd     String   @default("")
+  isNightShift Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
+
+  @@map("shifts")
+}
+
+// ─── HR Holidays ──────────────────────────────────────────────────────────
+
+model Holiday {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  holidayType String
+  description String?
+  isPaid      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("holidays")
+}
+
+// ─── HR Awards ────────────────────────────────────────────────────────────
+
+model Award {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  employeeId  String
+  awardType   String
+  awardDate   DateTime
+  description String?
+  certificate String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("awards")
+}
+
+// ─── HR Promotions ────────────────────────────────────────────────────────
+
+model Promotion {
+  id                  String   @id @default(uuid()) @map("_id")
+  workspaceId         String
+  employeeId          String
+  previousBranch      String?
+  previousDepartment  String?
+  previousDesignation String?
+  currentBranch       String?
+  currentDepartment   String?
+  currentDesignation  String?
+  effectiveDate       DateTime
+  reason              String?
+  document            String?
+  status              String   @default("Pending")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("promotions")
+}
+
+// ─── HR Resignations ──────────────────────────────────────────────────────
+
+model Resignation {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+  employeeId      String
+  approvedBy      String?
+  lastWorkingDate DateTime
+  reason          String?
+  description     String?
+  document        String?
+  status          String   @default("Pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("resignations")
+}
+
+// ─── HR Terminations ────────────────────────────────────────────────────
+
+model Termination {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+  employeeId      String
+  terminationType String
+  approvedBy      String?
+  noticeDate      DateTime
+  terminationDate DateTime
+  reason          String?
+  description     String?
+  document        String?
+  status          String   @default("Pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("terminations")
+}
+
+// ─── HR Warnings ──────────────────────────────────────────────────────────
+
+model Warning {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  employeeId  String
+  warningBy   String?
+  warningType String
+  subject     String
+  severity    String   @default("Minor")
+  warningDate DateTime
+  status      String   @default("Active")
+  description String?
+  document    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("warnings")
+}
+
+// ─── HR Complaints ───────────────────────────────────────────────────────
+
+model Complaint {
+  id               String   @id @default(uuid()) @map("_id")
+  workspaceId      String
+  employeeId       String
+  againstEmployeeId String
+  complaintType    String
+  subject          String
+  complaintDate    DateTime
+  status           String   @default("Pending")
+  description      String?
+  document         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee         Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  againstEmployee  Employee  @relation("ComplaintAgainst", fields: [againstEmployeeId], references: [id], onDelete: Cascade)
+
+  @@map("complaints")
+}
+
+// ─── HR Transfers ────────────────────────────────────────────────────────
+
+model Transfer {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+  employeeId      String
+  approvedBy      String?
+  effectiveDate   DateTime
+  fromBranch      String?
+  fromDepartment  String?
+  fromDesignation String?
+  toBranch        String?
+  toDepartment    String?
+  toDesignation   String?
+  reason          String?
+  document        String?
+  status          String   @default("Pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("transfers")
+}
+
+// ─── HR Acknowledgments ─────────────────────────────────────────────────
+
+model Acknowledgment {
+  id               String    @id @default(uuid()) @map("_id")
+  workspaceId      String
+  employeeId       String
+  documentTitle    String
+  assignedBy       String?
+  assignedDate     DateTime
+  acknowledgedDate DateTime?
+  status           String    @default("Pending")
+  note             String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("acknowledgments")
+}
+
+// ─── HR Events ───────────────────────────────────────────────────────────
+
+model Event {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  employeeId  String?
+  title       String
+  eventType   String
+  departments String?
+  startDate   DateTime
+  endDate     DateTime
+  startTime   String
+  endTime     String
+  location    String?
+  color       String   @default("#3b82f6")
+  description String?
+  approvedBy  String?
+  status      String   @default("Pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@map("events")
+}
+
+// ─── HR Company Policies ────────────────────────────────────────────────
+
+model CompanyPolicy {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  title       String
+  branch      String
+  description String?
+  fileName    String?
+  fileUrl     String?
+  status      String   @default("Draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("company_policies")
+}
+
+// ─── HR Setup Types ─────────────────────────────────────────────────────
+
+model Branch {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  designations Designation[]
+
+  @@map("branches")
+}
+
+model Designation {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  branchId    String?
+  departmentId String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  branch     Branch?    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@map("designations")
+}
+
+model DocumentType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isRequired  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("document_types")
+}
+
+model AwardType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("award_types")
+}
+
+model TerminationType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("termination_types")
+}
+
+model WarningType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("warning_types")
+}
+
+model ComplaintType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("complaint_types")
+}
+
+model HolidayType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("holiday_types")
+}
+
+model DocumentCategory {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("document_categories")
+}
+
+model AnnouncementCategory {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("announcement_categories")
+}
+
+model EventType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("event_types")
+}
+
+model AllowanceType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("allowance_types")
+}
+
+model DeductionType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("deduction_types")
+}
+
+model LoanType {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("loan_types")
+}
+
+model WorkingDay {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  day         String
+  isWorking   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("working_days")
+}
+
+model IpRestrict {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  ip          String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("ip_restricts")
+}
+
+// ─── Accounting ──────────────────────────────────────────────────────────────
+
+model BankAccount {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+  name            String
+  accountNumber   String?
+  bankName        String?
+  branchName      String?
+  type            String   @default("CHECKING")
+  glAccount       String?
+  paymentGateway  String?
+  currency        String   @default("USD")
+  openingBalance  Float    @default(0)
+  currentBalance  Float    @default(0)
+  iban            String?
+  swiftCode       String?
+  routingNumber   String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  transactions    BankTransaction[]
+  customerPayments CustomerPayment[]
+  vendorPayments  VendorPayment[]
+  revenues        Revenue[]
+  expenses        Expense[]
+  fromTransfers   BankTransfer[]    @relation("fromTransfers")
+  toTransfers     BankTransfer[]    @relation("toTransfers")
+
+  @@map("bank_accounts")
+}
+
+
+
+
+
+
+
+model VendorPayment {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+
+  paymentNumber   String   @unique
+
+  vendorId        String
+  bankAccountId   String?
+
+  paymentDate     DateTime
+  amount          Float
+
+  referenceNumber String?
+  notes           String?
+
+  status          String   @default("Cleared")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  vendor       Vendor       @relation(fields: [vendorId], references: [id])
+  bankAccount  BankAccount? @relation(fields: [bankAccountId], references: [id])
+
+  @@map("vendor_payments")
+}
+
+
+
+
+
+
+
+model BankTransaction {
+  id            String   @id @default(uuid()) @map("_id")
+  bankAccountId String
+  workspaceId   String
+  date          DateTime
+  description   String
+  reference     String?
+  amount        Float
+  type          String   @default("DEBIT")
+  category      String?
+  status        String   @default("Completed")
+  reconciled    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("bank_transactions")
+}
+
+model BankTransfer {
+  id             String   @id @default(uuid()) @map("_id")
+  workspaceId    String
+  transferNumber String   @unique
+  date           DateTime
+  fromAccountId  String
+  toAccountId    String
+  amount         Float
+  charges        Float    @default(0)
+  reference      String?
+  description    String?
+  status         String   @default("Pending")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace    Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromAccount  BankAccount @relation("fromTransfers", fields: [fromAccountId], references: [id])
+  toAccount    BankAccount @relation("toTransfers", fields: [toAccountId], references: [id])
+
+  @@map("bank_transfers")
+}
+
+model Revenue {
+  id               String   @id @default(uuid()) @map("_id")
+  workspaceId      String
+  revenueNumber    String   @unique
+  date             DateTime
+  category         String
+  bankAccountId    String?
+  chartOfAccountId String?
+  amount           Float
+  referenceNumber  String?
+  description      String?
+  status           String   @default("Draft")
+  approvedById     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  bankAccount    BankAccount?   @relation(fields: [bankAccountId], references: [id])
+  chartOfAccount ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
+  approvedBy     User?          @relation(fields: [approvedById], references: [id])
+
+  @@map("revenues")
+}
+
+model CustomerPayment {
+  id              String   @id @default(uuid()) @map("_id")
+  workspaceId     String
+  paymentNumber   String   @unique
+  customerId      String?
+  bankAccountId   String?
+  paymentDate     DateTime
+  amount          Float
+  referenceNumber String?
+  notes           String?
+  status          String   @default("completed")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id])
+
+  @@map("customer_payments")
+}
+
+model ChartOfAccount {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  code        String
+  name        String
+  type        String
+  subtype     String?
+  description String?
+  isActive    Boolean  @default(true)
+  normalBalance String  @default("Debit")
+  openingBalance Float   @default(0)
+  currentBalance Float   @default(0)
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent       ChartOfAccount?      @relation("ChartOfAccountHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children     ChartOfAccount[]     @relation("ChartOfAccountHierarchy")
+  journalLines JournalEntryLine[]
+  revenues     Revenue[]
+  expenses     Expense[]
+
+  @@map("chart_of_accounts")
+}
+
+model JournalEntry {
+  id           String    @id @default(uuid()) @map("_id")
+  workspaceId  String
+  entryNumber  String
+  date         DateTime
+  description  String?
+  reference    String?
+  status       String    @default("DRAFT")
+  totalDebit   Float     @default(0)
+  totalCredit  Float     @default(0)
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspace Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  lines     JournalEntryLine[]
+
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id             String @id @default(uuid()) @map("_id")
+  journalEntryId String
+  accountId      String
+  type           String
+  amount         Float
+  description    String?
+
+  journalEntry JournalEntry     @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account      ChartOfAccount   @relation(fields: [accountId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("journal_entry_lines")
+}
+
+// ─── CRM ─────────────────────────────────────────────────────────────────────
+
+model CrmAccount {
+  id                    String   @id @default(uuid()) @map("_id")
+  workspaceId           String
+  name                  String
+  email                 String?
+  phone                 String?
+  website               String?
+  accountType           String?
+  industry              String?
+  assignedTo            String?
+  document              String?
+  address               String?
+  city                  String?
+  billingState          String?
+  country               String?
+  billingPostalCode     String?
+  shippingSameAsBilling Boolean  @default(false)
+  shippingAddress       String?
+  shippingCity          String?
+  shippingState         String?
+  shippingCountry       String?
+  shippingPostalCode    String?
+  description           String?
+  notes                 String?
+  status                String   @default("Active")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contacts     CrmContact[]
+  opportunities Opportunity[]
+
+  @@map("crm_accounts")
+}
+
+model CrmContact {
+  id                     String   @id @default(uuid()) @map("_id")
+  workspaceId            String
+  firstName              String
+  lastName               String
+  email                  String?
+  phone                  String?
+  title                  String?
+  department             String?
+  accountId              String?
+  assignedTo             String?
+  source                 String?
+  preferredContactMethod String?
+  tags                   Json?
+  socialMediaUrl         String?
+  address                String?
+  city                   String?
+  state                  String?
+  country                String?
+  postalCode             String?
+  description            String?
+  notes                  String?
+  status                 String   @default("Active")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account   CrmAccount? @relation(fields: [accountId], references: [id])
+
+  @@map("crm_contacts")
+}
+
+model Opportunity {
+  id               String    @id @default(uuid()) @map("_id")
+  workspaceId      String
+  name             String
+  accountId        String?
+  contactId        String?
+  value            Float?
+  stage            String    @default("Prospecting")
+  probability      Int       @default(0)
+  closeDate        DateTime?
+  assignedTo       String?
+  source           String?
+  nextFollowupDate DateTime?
+  nextStep         String?
+  lostReason       String?
+  description      String?
+  notes            String?
+  status           String    @default("Active")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account     CrmAccount?  @relation(fields: [accountId], references: [id])
+  salesOrders SalesOrder[]
+
+  @@map("opportunities")
+}
+
+model SalesOrder {
+  id                   String    @id @default(uuid()) @map("_id")
+  workspaceId          String
+  orderNumber          String
+  name                 String?
+  customerName         String
+  customerEmail        String?
+  customerId           String?
+  opportunityId        String?
+  quoteId              String?
+  quoteNumber          String?
+  accountId            String?
+  accountName          String?
+  assignedUserId       String?
+  assignedUserName     String?
+  warehouseId          String?
+  warehouseName        String?
+  billingAddress       String?
+  billingCity          String?
+  billingState         String?
+  billingCountry       String?
+  billingPostalCode    String?
+  shippingSameAsBilling Boolean  @default(false)
+  shippingAddress      String?
+  shippingCity         String?
+  shippingState        String?
+  shippingCountry      String?
+  shippingPostalCode   String?
+  billingContactId     String?
+  billingContactName   String?
+  shippingContactId    String?
+  shippingContactName  String?
+  shippingProvider     String?
+  description          String?
+  notes                String?
+  items                Json
+  subtotal             Float     @default(0)
+  tax                  Float     @default(0)
+  discount             Float     @default(0)
+  total                Float     @default(0)
+  status               String    @default("DRAFT")
+  orderDate            DateTime  @default(now())
+  dueDate              DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id])
+
+  @@map("sales_orders")
+}
+
+model SalesQuote {
+  id                   String    @id @default(uuid()) @map("_id")
+  workspaceId          String
+  quoteNumber          String    @unique
+  name                 String?
+  customerName         String
+  customerEmail        String?
+  customerId           String?
+  opportunityId        String?
+  opportunityName      String?
+  accountId            String?
+  accountName          String?
+  assignedUserId       String?
+  assignedUserName     String?
+  warehouseId          String?
+  warehouseName        String?
+  billingAddress       String?
+  billingCity          String?
+  billingState         String?
+  billingCountry       String?
+  billingPostalCode    String?
+  shippingSameAsBilling Boolean  @default(false)
+  shippingAddress      String?
+  shippingCity         String?
+  shippingState        String?
+  shippingCountry      String?
+  shippingPostalCode   String?
+  billingContactId     String?
+  billingContactName   String?
+  shippingContactId    String?
+  shippingContactName  String?
+  shippingProvider     String?
+  description          String?
+  notes                String?
+  items                Json     @default("[]")
+  subtotal             Float    @default(0)
+  tax                  Float    @default(0)
+  discount             Float    @default(0)
+  total                Float    @default(0)
+  status               String   @default("Draft")
+  quoteDate            DateTime @default(now())
+  expiryDate           DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("sales_quotes")
+}
+
+model SalesAccount {
+  id                    String   @id @default(uuid()) @map("_id")
+  workspaceId           String
+  name                  String
+  email                 String?
+  phone                 String?
+  website               String?
+  accountType           String?
+  industry              String?
+  assignedTo            String?
+  document              String?
+  address               String?
+  city                  String?
+  billingState          String?
+  country               String?
+  billingPostalCode     String?
+  shippingSameAsBilling Boolean  @default(false)
+  shippingAddress       String?
+  shippingCity          String?
+  shippingState         String?
+  shippingCountry       String?
+  shippingPostalCode    String?
+  description           String?
+  notes                 String?
+  status                String   @default("Active")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("sales_accounts")
+}
+
+// ─── HRM: Leave Balance ──────────────────────────────────────────────────────
+
+model LeaveBalance {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  employeeId  String
+  leaveTypeId String
+  year        Int
+  allocated   Float    @default(0)
+  used        Float    @default(0)
+  remaining   Float    @default(0)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@map("leave_balances")
+}
+
+// ─── HRM: Payroll ────────────────────────────────────────────────────────────
+
+model PayrollRun {
+  id              String    @id @default(uuid()) @map("_id")
+  workspaceId     String
+  title           String?
+  frequency       String    @default("Monthly")
+  month           Int
+  year            Int
+  payPeriodStart  DateTime?
+  payPeriodEnd    DateTime?
+  payDate         DateTime?
+  bankAccountId   String?
+  notes           String?
+  status          String    @default("DRAFT")
+  totalGross      Float     @default(0)
+  totalNet        Float     @default(0)
+  totalDeductions Float     @default(0)
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  payslips    Payslip[]
+
+  @@map("payroll_runs")
+}
+
+model Payslip {
+  id           String @id @default(uuid()) @map("_id")
+  payrollRunId String
+  employeeId   String
+  basicSalary  Float
+  allowances   Json   @default("[]")
+  deductions   Json   @default("[]")
+  grossSalary  Float
+  netSalary    Float
+  status       String @default("PENDING")
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("payslips")
+}
+
+// ─── HRM: Contracts & Work Permits ───────────────────────────────────────────
+
+model Contractor {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  company     String?
+  email       String?
+  phone       String?
+  address     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workPermits WorkPermit[]
+
+  @@map("contractors")
+}
+
+model WorkPermit {
+  id           String    @id @default(uuid()) @map("_id")
+  workspaceId  String
+  permitNumber String
+  contractorId String
+  type         String
+  location     String?
+  description  String?
+  startDate    DateTime
+  endDate      DateTime
+  status       String    @default("PENDING")
+  approvedBy   String?
+  approvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspace  Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  contractor Contractor @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+
+  @@map("work_permits")
+}
+
+// ─── Timesheets ──────────────────────────────────────────────────────────────
+
+model Timesheet {
+  id          String    @id @default(uuid()) @map("_id")
+  workspaceId String
+  employeeId  String?
+  userId      String
+  weekStart   DateTime
+  weekEnd     DateTime
+  totalHours  Float     @default(0)
+  status      String    @default("DRAFT")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  entries   TimesheetEntry[]
+
+  @@map("timesheets")
+}
+
+model TimesheetEntry {
+  id          String   @id @default(uuid()) @map("_id")
+  timesheetId String
+  date        DateTime
+  hours       Float
+  description String?
+  projectId   String?
+  taskId      String?
+  isBillable  Boolean  @default(true)
+
+  timesheet Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
+
+  @@map("timesheet_entries")
+}
+
+// ─── Warehouse ───────────────────────────────────────────────────────────────
+
+model Warehouse {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String
+  code        String?
+  phone       String?
+  email       String?
+  country     String?
+  city        String?
+  address     String?
+  zipCode     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  products          Product[]
+  fromTransfers     StockTransfer[]   @relation("FromWarehouse")
+  toTransfers       StockTransfer[]   @relation("ToWarehouse")
+  purchaseInvoices  PurchaseInvoice[]
+  posOrders         PosOrder[]
+  posReturns        PosReturn[]
+  purchaseReturns   PurchaseReturn[]
+
+  @@map("warehouses")
+}
+
+// ─── Stock Transfers ─────────────────────────────────────────────────────────
+
+model StockTransfer {
+  id                 String    @id @default(uuid()) @map("_id")
+  workspaceId        String
+  fromWarehouseId    String?
+  fromWarehouseName  String
+  toWarehouseId      String?
+  toWarehouseName    String
+  productId          String?
+  productName        String
+  quantity           Int
+  date               DateTime  @default(now())
+  status             String    @default("Completed")
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product     Product?   @relation(fields: [productId], references: [id])
+  fromWarehouse Warehouse? @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouse   Warehouse? @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+
+  @@map("stock_transfers")
+}
+
+// ─── Purchase: Vendor ────────────────────────────────────────────────────────
+
+model Vendor {
+  id           String   @id @default(uuid()) @map("_id")
+  workspaceId  String
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
+  country      String?
+  paymentTerms String?
+  taxId        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  purchaseInvoices   PurchaseInvoice[]
+  purchaseReturns    PurchaseReturn[]
+  vendorPayments     VendorPayment[]
+  debitNotes         DebitNote[]
+
+  @@map("vendors")
+}
+
+// ─── Purchase: Invoice ───────────────────────────────────────────────────────
+
+model PurchaseInvoice {
+  id                   String   @id @default(uuid()) @map("_id")
+  workspaceId          String
+  invoiceNumber        String   @unique
+  vendorId             String?
+  vendorName           String
+  invoiceDate          DateTime
+  dueDate              DateTime?
+  warehouseId          String?
+  warehouseName        String?
+  paymentTerms         String?
+  notes                String?
+  items                Json     @default("[]")
+  subtotal             Float    @default(0)
+  discount             Float    @default(0)
+  tax                  Float    @default(0)
+  total                Float    @default(0)
+  balance              Float    @default(0)
+  status               String   @default("Draft")
+  recurring            Boolean  @default(false)
+  recurringFreq        String?
+  customRecurringDays  Int?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  vendor    Vendor?   @relation(fields: [vendorId], references: [id])
+  warehouse Warehouse? @relation(fields: [warehouseId], references: [id])
+
+  @@map("purchase_invoices")
+}
+
+// ─── Purchase: Return ────────────────────────────────────────────────────────
+
+model PurchaseReturn {
+  id            String   @id @default(uuid()) @map("_id")
+  workspaceId   String
+  returnNumber  String   @unique
+  vendorId      String?
+  vendorName    String
+  warehouseId   String?
+  warehouseName String?
+  invoiceId     String?
+  returnDate    DateTime
+  reason        String?
+  notes         String?
+  items         Json     @default("[]")
+  totalAmount   Float    @default(0)
+  status        String   @default("Draft")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  vendor      Vendor?      @relation(fields: [vendorId], references: [id])
+  warehouse   Warehouse?   @relation(fields: [warehouseId], references: [id])
+  debitNotes  DebitNote[]
+
+  @@map("purchase_returns")
+}
+
+// ─── Accounting: Debit Note ──────────────────────────────────────────────────
+
+model DebitNote {
+  id                String   @id @default(uuid()) @map("_id")
+  workspaceId       String
+  debitNoteNumber   String   @unique
+  purchaseReturnId  String?
+  vendorId          String?
+  date              DateTime
+  totalAmount       Float    @default(0)
+  balance           Float    @default(0)
+  status            String   @default("Draft")
+  approvedById      String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  workspace      Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  purchaseReturn PurchaseReturn? @relation(fields: [purchaseReturnId], references: [id])
+  vendor         Vendor?        @relation(fields: [vendorId], references: [id])
+  approvedBy     User?          @relation("ApprovedDebitNotes", fields: [approvedById], references: [id])
+
+  @@map("debit_notes")
+}
+
+// ─── Accounting: Credit Note ─────────────────────────────────────────────────
+
+model CreditNote {
+  id                String   @id @default(uuid()) @map("_id")
+  workspaceId       String
+  creditNoteNumber  String   @unique
+  salesReturnId     String?
+  customerId        String?
+  date              DateTime
+  totalAmount       Float    @default(0)
+  balance           Float    @default(0)
+  status            String   @default("Draft")
+  approvedById      String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  salesReturn  SalesReturn? @relation(fields: [salesReturnId], references: [id])
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  approvedBy   User?        @relation("ApprovedCreditNotes", fields: [approvedById], references: [id])
+
+  @@map("credit_notes")
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  userId      String
+  title       String
+  message     String
+  type        String   @default("info")
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─── Rate Limiting (system-wide, no workspace) ───────────────────────────────
+
+model RateLimitAttempt {
+  id          String    @id @default(uuid()) @map("_id")
+  key         String    @unique
+  attempts    Int       @default(1)
+  lastAttempt DateTime
+  lockedUntil DateTime?
+
+  @@map("rate_limit_attempts")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  userId      String?
+  action      String
+  entity      String
+  entityId    String?
+  description String?
+  metadata    Json     @default("{}")
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+}
+
+// ─── Custom Roles & Permissions ──────────────────────────────────────────────
+
+model CustomRole {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  name        String   // e.g. "accountant"
+  label       String   // e.g. "Accountant"
+  permissions String[] // ["users.manage", "invoices.create", ...]
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members   WorkspaceMember[] @relation("CustomRoleMembers")
+
+  @@unique([workspaceId, name])
+  @@map("custom_roles")
+}
+
+// ─── Sales: Customer ─────────────────────────────────────────────────────────
+
+model Customer {
+  id                    String   @id @default(uuid()) @map("_id")
+  workspaceId           String
+  userId                String?  // linked workspace user
+  customerCode          String?
+  name                  String   // company name
+  contactPerson         String?
+  email                 String?
+  phone                 String?
+  taxNumber             String?
+  paymentTerms          String?
+  // Billing
+  billingName           String?
+  billingAddress        String?
+  billingAddress2       String?
+  billingCity           String?
+  billingState          String?
+  billingCountry        String?
+  billingZip            String?
+  electronicAddress     String?
+  electronicAddressScheme String?
+  // Shipping
+  shippingSameAsBilling Boolean  @default(true)
+  shippingName          String?
+  shippingAddress       String?
+  shippingAddress2      String?
+  shippingCity          String?
+  shippingState         String?
+  shippingCountry       String?
+  shippingZip           String?
+  // Other
+  notes                 String?
+  creditLimit           Float?
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  salesInvoices   SalesInvoice[]
+  salesReturns    SalesReturn[]
+  customerPayments CustomerPayment[]
+  creditNotes     CreditNote[]
+
+  @@map("customers")
+}
+
+// ─── Sales: Invoice ──────────────────────────────────────────────────────────
+
+model SalesInvoice {
+  id                   String   @id @default(uuid()) @map("_id")
+  workspaceId          String
+  invoiceNumber        String   @unique
+  customerId           String?
+  customerName         String
+  invoiceDate          DateTime
+  dueDate              DateTime?
+  warehouseId          String?
+  warehouseName        String?
+  paymentTerms         String?
+  notes                String?
+  items                Json     @default("[]")
+  subtotal             Float    @default(0)
+  discount             Float    @default(0)
+  tax                  Float    @default(0)
+  total                Float    @default(0)
+  balance              Float    @default(0)
+  status               String   @default("Draft")
+  signature            String?  // base64 data URL of the signature image
+  generatedAt          DateTime?
+  pdfUrl               String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer  Customer? @relation(fields: [customerId], references: [id])
+
+  @@map("sales_invoices")
+}
+
+// ─── Sales: Return ───────────────────────────────────────────────────────────
+
+model SalesReturn {
+  id            String   @id @default(uuid()) @map("_id")
+  workspaceId   String
+  returnNumber  String   @unique
+  customerId    String?
+  customerName  String
+  warehouseId   String?
+  warehouseName String?
+  invoiceId     String?
+  returnDate    DateTime
+  reason        String?
+  notes         String?
+  items         Json     @default("[]")
+  totalAmount   Float    @default(0)
+  status        String   @default("Draft")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  creditNotes  CreditNote[]
+
+  @@map("sales_returns")
+}
+
+// ─── Sales: System Setup ─────────────────────────────────────────────────────
+
+model SystemSetup {
+  id          String   @id @default(uuid()) @map("_id")
+  workspaceId String
+  type        String   // accountType, accountIndustry, opportunityStage, shippingProvider, caseType, documentType, documentFolder
+  name        String
+  attributes  Json     @default("{}") // { order: 1, color: "#3b82f6", website: "...", description: "..." }
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, type, name])
+  @@map("system_setup")
+}

@@ -1,0 +1,53 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/db";
+import { badRequest, requireAnySession, unauthorized } from "@/lib/api-auth";
+
+export async function GET() {
+  const ctx = await requireAnySession();
+  if (!ctx) return unauthorized();
+  if (!ctx.workspace) return Response.json({ error: "No workspace" }, { status: 400 });
+
+  const payments = await prisma.customerPayment.findMany({
+    where: { workspaceId: ctx.workspace.id },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      bankAccount: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return Response.json(payments);
+}
+
+export async function POST(req: NextRequest) {
+  const ctx = await requireAnySession();
+  if (!ctx) return unauthorized();
+  if (!ctx.workspace) return Response.json({ error: "No workspace" }, { status: 400 });
+
+  const body = await req.json();
+  if (!body.paymentDate) return badRequest("Payment date is required");
+  if (!body.amount || Number(body.amount) <= 0) return badRequest("Valid amount is required");
+
+  const count = await prisma.customerPayment.count({ where: { workspaceId: ctx.workspace.id } });
+  const paymentNumber = `PAY-${String(count + 1).padStart(4, "0")}`;
+
+  const payment = await prisma.customerPayment.create({
+    data: {
+      workspaceId: ctx.workspace.id,
+      paymentNumber,
+      customerId: body.customerId || null,
+      bankAccountId: body.bankAccountId || null,
+      paymentDate: new Date(body.paymentDate),
+      amount: Number(body.amount),
+      referenceNumber: body.referenceNumber?.trim() || null,
+      notes: body.notes?.trim() || null,
+      status: body.status || "completed",
+    },
+    include: {
+      customer: { select: { id: true, name: true, email: true } },
+      bankAccount: { select: { id: true, name: true } },
+    },
+  });
+
+  return Response.json(payment, { status: 201 });
+}
