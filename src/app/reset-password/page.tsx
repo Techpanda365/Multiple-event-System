@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
+// ✅ Yeh line add karo - force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
