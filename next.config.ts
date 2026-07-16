@@ -1,26 +1,49 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // TypeScript configuration
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // ✅ Yeh line add karo
+  
+  // ✅ REMOVED: eslint key (no longer supported in next.config.ts)
+  // ESLint is now configured in eslint.config.mjs
+  
+  // Output configuration for Render deployment
   output: 'standalone',
   
-  // ✅ Dynamic pages ke liye
+  // Timeout for static page generation
   staticPageGenerationTimeout: 120,
   
-  // ✅ Next.js 16.2.9 specific
+  // External packages that should be handled by server
   serverExternalPackages: ['@prisma/client', 'bcryptjs'],
   
-  // ✅ Experimental features
-  experimental: {
-    // Agar server actions use kar rahe ho toh
-    // serverActions: true,
-  },
+  // Optional: Experimental features (uncomment if needed)
+  // experimental: {
+  //   serverActions: true,
+  // },
+  
+  // Optional: Image optimization settings
+  // images: {
+  //   domains: ['your-domain.com'],
+  //   remotePatterns: [
+  //     {
+  //       protocol: 'https',
+  //       hostname: '**',
+  //     },
+  //   ],
+  // },
+  
+  // Optional: Redirects and rewrites
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: '/old-path',
+  //       destination: '/new-path',
+  //       permanent: true,
+  //     },
+  //   ];
+  // },
 };
 
 export default nextConfig;
