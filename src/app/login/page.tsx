@@ -43,7 +43,7 @@ export default function LoginPage() {
         localStorage.setItem("refresh_token", data.refresh_token);
       }
 
-      window.location.href = "/dashboard";
+      window.location.href = loginType === "superadmin" ? "/admin" : "/dashboard";
     } catch (err) {
       console.error("Login error:", err);
       setError("Something went wrong. Please try again.");

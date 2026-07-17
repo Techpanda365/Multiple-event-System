@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { signToken, signRefreshToken } from "@/lib/jwt";
+import { requireAdminSession } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get("session-token");
-    if (!sessionCookie) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    const { default: jwt } = await import("jsonwebtoken");
-    const SECRET = process.env.AUTH_SECRET || "super-secret-key";
-    let adminPayload: any;
-    try {
-      adminPayload = jwt.verify(sessionCookie.value, SECRET);
-    } catch {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-    }
-
-    const isSuperAdmin = adminPayload.role?.toUpperCase() === "SUPER_ADMIN";
-    if (!isSuperAdmin) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    const ctx = await requireAdminSession();
+    if (!ctx) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();

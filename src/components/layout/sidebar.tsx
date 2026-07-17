@@ -22,7 +22,7 @@ import { buildCompanyNav, type NavItem, type NavSection } from "@/lib/navigation
 const companyNav = buildCompanyNav();
 
 const superAdminNav: NavSection[] = [
-  { parent: { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard }, children: [] },
+  { parent: { title: "Dashboard", href: "/admin", icon: LayoutDashboard }, children: [] },
   { parent: { title: "Users", href: "/admin/users", icon: UserCog }, children: [] },
   { parent: { title: "Add-ons Manager", href: "/admin/addons", icon: Puzzle }, children: [] },
   { parent: { title: "Google Analytics", href: "/admin/google-analytics", icon: BarChart3 }, children: [

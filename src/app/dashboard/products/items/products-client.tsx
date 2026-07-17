@@ -7,7 +7,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Trash2, ChevronLeft, ChevronRight, PackagePlus, X, Warehouse } from "lucide-react";
+import { Plus, Search, Trash2, ChevronLeft, ChevronRight, PackagePlus, X, Warehouse,Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
 

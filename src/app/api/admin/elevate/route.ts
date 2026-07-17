@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAdminSession } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
   try {
+    const ctx = await requireAdminSession();
+    if (!ctx) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { email } = await req.json();
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
