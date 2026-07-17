@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { badRequest, requireWorkspaceSession, unauthorized } from "@/lib/api-auth";
+import { updateStock } from "@/lib/stock-helper";
 
 function generateReturnNumber(): string {
   const now = new Date();
@@ -50,6 +51,10 @@ export async function POST(req: NextRequest) {
       status: body.status || "Draft",
     },
   });
+
+  if (body.status !== "Draft") {
+    await updateStock(items, "decrease");
+  }
 
   return Response.json(purchaseReturn, { status: 201 });
 }

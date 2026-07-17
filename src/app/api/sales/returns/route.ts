@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { badRequest, requireWorkspaceSession, unauthorized } from "@/lib/api-auth";
+import { updateStock } from "@/lib/stock-helper";
 
 export async function GET() {
   const ctx = await requireWorkspaceSession();
@@ -44,6 +45,10 @@ export async function POST(req: NextRequest) {
       status: body.status || "Draft",
     },
   });
+
+  if (body.status !== "Draft") {
+    await updateStock(items, "increase", "productId", "returnQty");
+  }
 
   return Response.json(ret, { status: 201 });
 }

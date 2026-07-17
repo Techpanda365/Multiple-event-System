@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { badRequest, requireAnySession, unauthorized } from "@/lib/api-auth";
+import { updateStock } from "@/lib/stock-helper";
 
 type ItemInput = { productId: string; quantity: number; price: number; total: number };
 
@@ -104,6 +105,10 @@ export async function POST(req: NextRequest) {
     },
     include: { orderItems: true },
   });
+
+  if (body.status !== "PENDING" && body.status !== "CANCELLED") {
+    await updateStock(body.items, "decrease");
+  }
 
   return Response.json({ ...order, counterName }, { status: 201 });
 }

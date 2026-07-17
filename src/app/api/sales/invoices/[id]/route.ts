@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAnySession, unauthorized, notFound } from "@/lib/api-auth";
+import { updateStock } from "@/lib/stock-helper";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireAnySession();
@@ -36,6 +37,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const invoice = await prisma.salesInvoice.update({ where: { id }, data });
+
+  if (body.status && body.status !== "Draft" && existing.status === "Draft") {
+    const items = Array.isArray(body.items) ? body.items : (existing.items as any[] || []);
+    await updateStock(items, "decrease");
+  }
+
   return Response.json(invoice);
 }
 

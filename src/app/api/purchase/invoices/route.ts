@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { badRequest, requireWorkspaceSession, unauthorized } from "@/lib/api-auth";
+import { updateStock } from "@/lib/stock-helper";
 
 function generateInvoiceNumber(): string {
   const now = new Date();
@@ -69,6 +70,11 @@ export async function POST(req: NextRequest) {
       customRecurringDays: body.customRecurringDays ? Number(body.customRecurringDays) : null,
     },
   });
+
+  const finalStatus = body.status || "Draft";
+  if (finalStatus !== "Draft") {
+    await updateStock(items, "increase");
+  }
 
   return Response.json(invoice, { status: 201 });
 }

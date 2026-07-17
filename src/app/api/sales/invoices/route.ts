@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { badRequest, requireAnySession, unauthorized } from "@/lib/api-auth";
 import { randomUUID } from "crypto";
+import { updateStock } from "@/lib/stock-helper";
 
 
 export async function GET() {
@@ -72,6 +73,11 @@ export async function POST(req: NextRequest) {
       status: body.status || "Draft",
     },
   });
+
+  const finalStatus = body.status || "Draft";
+  if (finalStatus !== "Draft") {
+    await updateStock(items, "decrease");
+  }
 
   return Response.json(invoice, { status: 201 });
 }

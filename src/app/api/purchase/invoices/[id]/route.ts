@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireWorkspaceSession, unauthorized, notFound } from "@/lib/api-auth";
+import { updateStock } from "@/lib/stock-helper";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireWorkspaceSession();
@@ -40,6 +41,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.customRecurringDays !== undefined) data.customRecurringDays = body.customRecurringDays ? Number(body.customRecurringDays) : null;
 
   const invoice = await prisma.purchaseInvoice.update({ where: { id }, data });
+
+  if (body.status && body.status !== "Draft" && existing.status === "Draft") {
+    const items = Array.isArray(body.items) ? body.items : (existing.items as any[] || []);
+    await updateStock(items, "increase");
+  }
+
   return Response.json(invoice);
 }
 
