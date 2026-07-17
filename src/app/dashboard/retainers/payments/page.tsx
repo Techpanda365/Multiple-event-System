@@ -225,7 +225,7 @@ export default function RetainerPaymentsPage() {
             </div>
             <div className="flex justify-end gap-2 p-4 border-t">
               <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={() => { setPayments((prev) => prev.filter((p) => p.id !== deleteId)); setDeleteId(null); }}>
+              <Button variant="destructive" onClick={async () => { try { await fetch(`/api/retainers/payments/${deleteId}`, { method: 'DELETE' }); setPayments((prev) => prev.filter((p) => p.id !== deleteId)); } catch {} setDeleteId(null); }}>
                 <Trash2 className="h-4 w-4 mr-1" /> Delete
               </Button>
             </div>
