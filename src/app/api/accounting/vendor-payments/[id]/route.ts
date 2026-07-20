@@ -22,6 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAnySession();
   if (!ctx) return unauthorized();
   if (!ctx.workspace) return Response.json({ error: "No workspace" }, { status: 400 });
@@ -48,9 +49,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   return Response.json(updated);
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAnySession();
   if (!ctx) return unauthorized();
   if (!ctx.workspace) return Response.json({ error: "No workspace" }, { status: 400 });
@@ -65,4 +71,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   await prisma.vendorPayment.delete({ where: { id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

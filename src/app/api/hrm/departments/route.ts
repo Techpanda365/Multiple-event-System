@@ -16,6 +16,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -27,4 +28,8 @@ export async function POST(req: NextRequest) {
   });
 
   return Response.json(department, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 import { auth } from "./auth";
 import { getUserWorkspace } from "./workspace";
+import { getAdminWorkspaceCookie } from "./admin-workspace";
 
 export async function requireAuth() {
   const session = await auth();
@@ -9,10 +11,21 @@ export async function requireAuth() {
 }
 
 // Workspace-required session — works for ADMIN, MANAGER, STAFF
-// Returns null if not logged in or no workspace found
+// Super admin with active workspace cookie uses that instead
 export async function requireWorkspaceSession() {
   const session = await auth();
   if (!session?.user) return null;
+
+  const isSuperAdmin = session.user.role?.toUpperCase() === "SUPER_ADMIN";
+
+  if (isSuperAdmin) {
+    const adminWsId = await getAdminWorkspaceCookie();
+    if (adminWsId) {
+      const workspace = await prisma.workspace.findUnique({ where: { id: adminWsId } });
+      if (workspace) return { session, workspace, user: session.user };
+    }
+    return null;
+  }
 
   const workspace = await getUserWorkspace(session.user.id);
   if (!workspace) return null;

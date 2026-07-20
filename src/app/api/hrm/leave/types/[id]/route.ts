@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { notFound, requireWorkspaceSession, unauthorized } from "@/lib/api-auth";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -22,12 +23,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
   if (result.count === 0) return notFound();
   return Response.json({ success: true });
+} catch (error) {
+  console.error("PUT error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
   await prisma.leaveType.deleteMany({ where: { id, workspaceId: ctx.workspace.id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

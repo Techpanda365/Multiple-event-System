@@ -6,6 +6,7 @@ import { notFound, requireAnySession, unauthorized } from "@/lib/api-auth";
 // Marks the invoice as "generated" and sets generatedAt timestamp.
 // The actual PDF is rendered client-side using jsPDF (see /pdf endpoint).
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAnySession();
   if (!ctx) return unauthorized();
   if (!ctx.workspace) return Response.json({ error: "No workspace" }, { status: 400 });
@@ -39,4 +40,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       generatedAt: updated.generatedAt,
     },
   });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

@@ -1738,7 +1738,7 @@ export function buildCompanyNav(): NavSection[] {
           },
           {
             title: "System Setup",
-            href: "/dashboard/S  ales/setup",
+            href: "/dashboard/Sales/setup",
             icon: Settings,
           },
         ],

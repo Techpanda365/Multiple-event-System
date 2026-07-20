@@ -12,6 +12,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -32,9 +33,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const warehouse = await prisma.warehouse.update({ where: { id }, data });
   return Response.json(warehouse);
+} catch (error) {
+  console.error("PUT error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -42,4 +48,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!existing) return notFound("Warehouse not found");
   await prisma.warehouse.delete({ where: { id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

@@ -10,6 +10,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const body = await req.json();
@@ -18,4 +19,8 @@ export async function POST(req: NextRequest) {
   const max = await prisma.crmDealStage.findFirst({ where: { workspaceId: ctx.workspace.id }, orderBy: { order: "desc" } });
   const item = await prisma.crmDealStage.create({ data: { workspaceId: ctx.workspace.id, name, pipeline: body.pipeline?.trim() || null, probability: Number(body.probability) || 0, order: (max?.order ?? -1) + 1 } });
   return Response.json(item, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

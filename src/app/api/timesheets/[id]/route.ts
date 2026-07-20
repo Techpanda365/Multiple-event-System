@@ -15,6 +15,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -49,9 +50,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     data: { status: body.status, notes: body.notes },
   });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("PUT error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -60,4 +66,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (existing.status === "APPROVED") return badRequest("Cannot delete an approved timesheet");
   await prisma.timesheet.delete({ where: { id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

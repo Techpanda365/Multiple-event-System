@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -43,6 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.image !== undefined) data.image = body.image;
   if (body.additionalImages !== undefined) data.additionalImages = body.additionalImages;
   if (body.warehouseId !== undefined) data.warehouseId = body.warehouseId;
+  if (body.unitId !== undefined) data.unitId = body.unitId;
   if (body.reorderLevel !== undefined) data.reorderLevel = body.reorderLevel != null ? Number(body.reorderLevel) : null;
   if (body.maxLevel !== undefined) data.maxLevel = body.maxLevel != null ? Number(body.maxLevel) : null;
   if (body.valuationMethod !== undefined) data.valuationMethod = body.valuationMethod;
@@ -51,9 +53,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const product = await prisma.product.update({ where: { id }, data });
   return Response.json(product);
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -61,4 +68,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!existing) return notFound("Product not found");
   await prisma.product.delete({ where: { id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

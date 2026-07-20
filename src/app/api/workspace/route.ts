@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { badRequest, requireWorkspaceSession, unauthorized } from "@/lib/api-auth";
 
 export async function PATCH(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -32,4 +33,8 @@ export async function PATCH(req: NextRequest) {
   });
 
   return Response.json({ workspace });
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

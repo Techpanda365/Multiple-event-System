@@ -12,6 +12,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 type Tax = { id: string; name: string; rate: number };
 type Category = { id: string; name: string; color: string };
 type Warehouse = { id: string; name: string };
+type Unit = { id: string; name: string };
 
 const ITEM_TYPES = ["Product", "Service"];
 const PRODUCT_TYPES = [
@@ -36,6 +37,7 @@ export function CreateItemClient() {
   const [taxes, setTaxes] = useState<Tax[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
 
   const [form, setForm] = useState({
     itemType: "Product",
@@ -53,6 +55,7 @@ export function CreateItemClient() {
     productImage: "",
     additionalImages: [] as string[],
     warehouseId: "",
+    unitId: "",
     reorderLevel: "",
     maxLevel: "",
     valuationMethod: "Weighted Average",
@@ -67,11 +70,13 @@ export function CreateItemClient() {
       fetch("/api/taxes").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/product-categories").then((r) => (r.ok ? r.json() : [])),
       fetch("/api/purchase/warehouses").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/units").then((r) => (r.ok ? r.json() : [])),
     ])
-      .then(([t, c, w]) => {
+      .then(([t, c, w, u]) => {
         setTaxes(Array.isArray(t) ? t : []);
         setCategories(Array.isArray(c) ? c : []);
         setWarehouses(Array.isArray(w) ? w : []);
+        setUnits(Array.isArray(u) ? u : []);
       })
       .catch(() => {});
   }, []);
@@ -102,6 +107,7 @@ export function CreateItemClient() {
         image: form.productImage || null,
         additionalImages: form.additionalImages,
         warehouseId: form.warehouseId || null,
+        unitId: form.unitId || null,
         reorderLevel: form.reorderLevel ? Number(form.reorderLevel) : null,
         maxLevel: form.maxLevel ? Number(form.maxLevel) : null,
         valuationMethod: form.valuationMethod,
@@ -308,6 +314,18 @@ export function CreateItemClient() {
                 onChange={(e) => set("quantity", e.target.value)}
                 className="max-w-40"
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Unit</label>
+              <select
+                value={form.unitId}
+                onChange={(e) => set("unitId", e.target.value)}
+                className="flex h-9 w-full max-w-xs rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select Unit</option>
+                {units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
             </div>
           </CardContent>
         </Card>

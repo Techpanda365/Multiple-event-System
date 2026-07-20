@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
       image: body.image || null,
       additionalImages: body.additionalImages || [],
       warehouseId: body.warehouseId || null,
+      unitId: body.unitId || null,
       reorderLevel: body.reorderLevel != null ? Number(body.reorderLevel) : null,
       maxLevel: body.maxLevel != null ? Number(body.maxLevel) : null,
       valuationMethod: body.valuationMethod || "Weighted Average",
@@ -64,4 +66,8 @@ export async function POST(req: NextRequest) {
   });
 
   return Response.json(product, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

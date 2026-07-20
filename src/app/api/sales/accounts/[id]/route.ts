@@ -14,6 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -26,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const updated = await prisma.salesAccount.update({
     where: { id: params.id },
     data: {
-      name: body.name,
+      name: body.name ?? undefined,
       email: body.email ?? undefined,
       phone: body.phone ?? undefined,
       website: body.website ?? undefined,
@@ -51,9 +52,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     },
   });
   return Response.json(updated);
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -64,4 +70,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   await prisma.salesAccount.delete({ where: { id: params.id } });
   return new Response(null, { status: 204 });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

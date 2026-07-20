@@ -5,6 +5,7 @@ import { badRequest, requireWorkspaceSession, unauthorized } from "@/lib/api-aut
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Params) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -18,9 +19,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (body.order !== undefined) data.order = Number(body.order);
   const updated = await prisma.crmDealStage.update({ where: { id }, data });
   return Response.json(updated);
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -28,4 +34,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!existing) return badRequest("Not found");
   await prisma.crmDealStage.delete({ where: { id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

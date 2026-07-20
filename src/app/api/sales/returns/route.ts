@@ -16,6 +16,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       warehouseId: body.warehouseId || null,
       warehouseName: body.warehouseName || null,
       invoiceId: body.invoiceId || null,
-      returnDate: new Date(body.returnDate) || new Date(),
+      returnDate: body.returnDate ? new Date(body.returnDate) : new Date(),
       reason: body.reason || null,
       notes: body.notes || null,
       items,
@@ -51,4 +52,8 @@ export async function POST(req: NextRequest) {
   }
 
   return Response.json(ret, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { buildCompanyNav, type NavItem, type NavSection } from "@/lib/navigation/company-nav";
+import { WorkspaceSwitcher } from "@/components/admin/workspace-switcher";
 
 const companyNav = buildCompanyNav();
 
@@ -272,6 +273,8 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Company</p>
           </div>
         )}
+
+        {isSuperAdmin && <WorkspaceSwitcher />}
 
         <div className="px-3 py-2 border-b border-white/10">
           <div className="relative">

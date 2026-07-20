@@ -5,6 +5,7 @@ import { badRequest, requireWorkspaceSession, unauthorized } from "@/lib/api-aut
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(_req: NextRequest, { params }: Params) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -30,4 +31,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
   });
 
   return Response.json(subscription);
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

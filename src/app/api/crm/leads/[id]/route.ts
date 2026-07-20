@@ -6,6 +6,7 @@ import { LeadStatus } from "@prisma/client";
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Params) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -35,9 +36,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   });
 
   return Response.json(lead);
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -49,4 +55,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
   await prisma.crmLead.delete({ where: { id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

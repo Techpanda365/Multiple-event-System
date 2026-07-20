@@ -4,6 +4,7 @@ import { requireAdminSession, unauthorized, badRequest, success } from "@/lib/ap
 
 // Super Admin — kisi user ko workspace assign karo ya nayi workspace banao
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
 
@@ -67,4 +68,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     message: `✅ Workspace "${workspace.name}" created and assigned to ${user.name || user.email}`,
     workspace,
   }, 201);
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

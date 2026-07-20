@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireWorkspaceSession, unauthorized } from "@/lib/api-auth";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
   const { id } = await params;
@@ -12,4 +13,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     data: { isRead: true },
   });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

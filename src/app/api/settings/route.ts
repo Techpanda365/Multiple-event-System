@@ -20,6 +20,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -35,4 +36,8 @@ export async function PUT(req: NextRequest) {
   }
 
   return Response.json({ success: true });
+} catch (error) {
+  console.error("PUT error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

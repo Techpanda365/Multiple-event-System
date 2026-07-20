@@ -22,10 +22,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
   const body = await req.json();
+  if (!body.customerName || !body.orderId) return badRequest("customerName and orderId are required");
 
   const items = Array.isArray(body.items) ? body.items : [];
   const totalAmount = body.totalAmount ?? items.reduce((sum: number, item: { total: number }) =>
@@ -49,4 +51,8 @@ export async function POST(req: NextRequest) {
   });
 
   return Response.json(posReturn, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

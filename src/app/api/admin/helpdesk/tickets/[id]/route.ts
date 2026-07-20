@@ -14,6 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
 
@@ -43,9 +44,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const ticket = await prisma.helpdeskTicket.update({ where: { id }, data });
 
   return success({ ticket });
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
 
@@ -56,4 +62,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await prisma.helpdeskTicket.delete({ where: { id } });
 
   return success({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

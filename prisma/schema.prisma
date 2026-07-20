@@ -619,6 +619,7 @@ model Product {
   image             String?
   additionalImages  Json     @default("[]")
   warehouseId       String?
+  unitId            String?
   reorderLevel      Int?
   maxLevel          Int?
   valuationMethod   String   @default("Weighted Average")
@@ -633,6 +634,7 @@ model Product {
   tax              Tax?             @relation(fields: [taxId], references: [id])
   stockTransfers   StockTransfer[]
   warehouse        Warehouse?       @relation(fields: [warehouseId], references: [id])
+  unit             Unit?            @relation(fields: [unitId], references: [id])
 
   @@map("products")
 }
@@ -1185,6 +1187,7 @@ model Unit {
   updatedAt   DateTime @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  products  Product[]
 
   @@unique([workspaceId, name])
   @@map("units")

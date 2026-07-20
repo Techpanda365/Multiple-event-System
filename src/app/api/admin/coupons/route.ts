@@ -17,6 +17,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const ctx = await requireAdminSession();
+    if (!ctx) return unauthorized();
+
     const body = await request.json();
     
     const {

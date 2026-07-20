@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdminSession, unauthorized, notFound, success } from "@/lib/api-auth";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
 
@@ -21,9 +22,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const category = await prisma.helpdeskCategory.update({ where: { id }, data });
 
   return success({ category });
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
 
@@ -34,4 +40,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await prisma.helpdeskCategory.delete({ where: { id } });
 
   return success({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

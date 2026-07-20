@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
 
   const proposals = await prisma.salesProposal.findMany({
     where: {
+      workspaceId: ctx.workspace.id,
       ...(status && status !== "ALL" ? { status } : {}),
       ...(search
         ? {
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
   const tax = Number(body.tax) || 0;
   const total = subtotal - discount + tax;
 
-  const count = await prisma.salesProposal.count();
+  const count = await prisma.salesProposal.count({ where: { workspaceId: ctx.workspace.id } });
   const now = new Date();
   const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
   const number = `SP-${dateStr}-${String(count + 1).padStart(3, "0")}`;
@@ -68,4 +70,8 @@ export async function POST(req: NextRequest) {
   });
 
   return Response.json(proposal, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

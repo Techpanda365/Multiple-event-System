@@ -12,6 +12,7 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
   const body = await req.json();
@@ -21,4 +22,8 @@ export async function PUT(req: NextRequest) {
     update: { value: JSON.stringify(body) },
   });
   return success({ success: true });
+} catch (error) {
+  console.error("PUT error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdminSession, unauthorized, success } from "@/lib/api-auth";
+import { requireAdminSession, unauthorized, badRequest, success } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
   const ctx = await requireAdminSession();
@@ -28,10 +28,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireAdminSession();
   if (!ctx) return unauthorized();
 
   const body = await req.json();
+  if (!body.userId || !body.email || !body.role) return badRequest("userId, email, and role are required");
   const log = await prisma.loginLog.create({
     data: {
       userId: body.userId,
@@ -44,4 +46,8 @@ export async function POST(req: NextRequest) {
   });
 
   return success({ log }, 201);
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

@@ -51,7 +51,7 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/dashboard")) {
-    if (isSuperAdmin && (pathname === "/dashboard/users/list" || pathname === "/dashboard/users" || pathname === "/dashboard/users/roles")) {
+    if (isSuperAdmin && pathname.startsWith("/dashboard/users")) {
       return NextResponse.redirect(new URL("/admin/users", request.url));
     }
     return NextResponse.next();

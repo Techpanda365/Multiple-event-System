@@ -29,6 +29,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  try {
   const ctx = await requireAuth();
   if (!ctx) return unauthorized();
 
@@ -80,4 +81,8 @@ export async function PATCH(req: NextRequest) {
   });
 
   return response;
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

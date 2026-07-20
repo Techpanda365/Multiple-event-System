@@ -19,6 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const ctx = await requireAnySession();
   if (!ctx) return unauthorized();
   if (!ctx.workspace) return Response.json({ error: "No workspace" }, { status: 400 });
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
       invoiceNumber,
       customerId: body.customerId || null,
       customerName: body.customerName,
-      invoiceDate: new Date(body.invoiceDate) || new Date(),
+      invoiceDate: body.invoiceDate ? new Date(body.invoiceDate) : new Date(),
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
       warehouseId: body.warehouseId || null,
       warehouseName: body.warehouseName || null,
@@ -80,4 +81,8 @@ export async function POST(req: NextRequest) {
   }
 
   return Response.json(invoice, { status: 201 });
+} catch (error) {
+  console.error("POST error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

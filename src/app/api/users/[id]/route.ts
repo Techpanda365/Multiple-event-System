@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireWorkspaceSession, unauthorized, notFound, success } from "@/lib/api-auth";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -31,9 +32,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   return success({ success: true });
+} catch (error) {
+  console.error("PATCH error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireWorkspaceSession();
   if (!ctx) return unauthorized();
 
@@ -45,4 +51,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   await prisma.workspaceMember.delete({ where: { id: member.id } });
   return success({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }

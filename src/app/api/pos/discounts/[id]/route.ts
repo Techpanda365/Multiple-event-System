@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { notFound, requireAnySession, unauthorized } from "@/lib/api-auth";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAnySession();
   if (!ctx || !ctx.workspace) return unauthorized();
   const { id } = await params;
@@ -27,12 +28,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   });
   return Response.json(record);
+} catch (error) {
+  console.error("PUT error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
   const ctx = await requireAnySession();
   if (!ctx || !ctx.workspace) return unauthorized();
   const { id } = await params;
   await prisma.posDiscount.deleteMany({ where: { id, workspaceId: ctx.workspace.id } });
   return Response.json({ success: true });
+} catch (error) {
+  console.error("DELETE error:", error);
+  return Response.json({ error: "Internal server error" }, { status: 500 });
+}
 }
